@@ -18,7 +18,7 @@ import pdb
 import copy
 from scipy.stats import truncnorm
 # Custom modules
-import utils
+import tem.utils as utils
 
 class Model(torch.nn.Module):
     def __init__(self, params):

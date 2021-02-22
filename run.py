@@ -14,10 +14,10 @@ import time
 import glob, os, shutil
 import importlib.util
 # Own module imports
-import world
-import utils
-import parameters
-import model as model    
+import tem.world as world
+import tem.utils as utils
+import tem.parameters as parameters
+import tem.model as model
 
 # Set random seeds for reproducibility
 np.random.seed(0)

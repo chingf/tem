@@ -12,10 +12,10 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 import time
 # Own module imports
-import world
-import parameters
-import model
-import plot
+import tem.world as world
+import tem.parameters as parameters
+import tem.model as model
+import tem.plot as plot
 
 # Set random seeds for reproducibility
 np.random.seed(0)
