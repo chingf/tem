@@ -133,23 +133,6 @@ def make_directories():
     # Return folders to new path
     return run_path, train_path, model_path, save_path, script_path, envs_path
 
-def make_struct_know_directories(main_save_path):
-    '''
-    Creates directories for storing data during a model training run. This function
-    is for interfacing with the struct-know project.
-    ''' 
-
-    train_path = main_save_path + '/train'
-    model_path = main_save_path + '/model'
-    save_path = main_save_path + '/save'
-    envs_path = main_save_path + '/envs'
-
-    os.makedirs(train_path)
-    os.makedirs(model_path)
-    os.makedirs(save_path)
-    os.makedirs(envs_path)
-    return train_path, model_path, save_path, envs_path
-
 def set_directories(date, run):
     '''
     Returns directories for storing data during a model training run from a given previous training run

@@ -81,7 +81,11 @@ def plot_memory(iters, steps = None, do_save = False):
         if do_save:
             fig.savefig('./figs/plot_mem_' + name + '.png')
 
-def plot_map(environment, values, ax=None, min_val=None, max_val=None, num_cols=100, location_cm='viridis', action_cm='Pastel1', do_plot_actions=False, shape='circle', radius=None):
+def plot_map(
+        environment, values, ax=None, min_val=None, max_val=None,
+        num_cols=100, location_cm='viridis', action_cm='Pastel1',
+        do_plot_actions=False, shape='circle', radius=None
+        ):
     # If min_val and max_val are not specified: take the minimum and maximum of the supplied values
     min_val = np.min(values) if min_val is None else min_val
     max_val = np.max(values) if max_val is None else max_val
@@ -207,7 +211,30 @@ def plot_cells(p, g, environment, n_f_ovc=0, columns=10):
                 col = int(c % columns)
                 # Plot rate map for this cell by collection firing rate at each location
                 plot_map(environment, np.array([loc_rates[l][c] for l in range(len(loc_rates))]), ax[row, col], shape='square', radius=1/np.sqrt(len(loc_rates)))
-    
+
+def plot_specific_cells(cells, names, environment, n_f_ovc=0, columns=10):
+    # Run through all rate maps, big nested arrays arranged as [frequency][location][cell]
+    # Calculate the number of rows that each frequency module requires
+    n_rows_f = np.cumsum([0] + [np.ceil(len(c[0]) * 1.0 / columns) for c in cells]).astype(int)
+    # Create subplots for cells across frequencies
+    fig, ax = plt.subplots(nrows=n_rows_f[-1], ncols=columns)
+    # Switch all axes off
+    for row in ax:
+        for col in row:
+            col.axis('off')
+    # And run through all frequencies to plot cells for that frequency
+    for f, loc_rates in enumerate(cells):
+        # Set title for current axis
+        ax[n_rows_f[f], int(columns/2)].set_title(names + ('' if f < len(cells) - n_f_ovc else ' object vector ') + ' cells, frequency ' 
+                                     + str(f if f < len(cells) - n_f_ovc else f - (len(cells) - n_f_ovc)))
+        # Plot map for each cell
+        for c in range(len(loc_rates[0])):
+            # Get current row and column
+            row = int(n_rows_f[f] + np.floor(c / columns))
+            col = int(c % columns)
+            # Plot rate map for this cell by collection firing rate at each location
+            plot_map(environment, np.array([loc_rates[l][c] for l in range(len(loc_rates))]), ax[row, col], shape='square', radius=1/np.sqrt(len(loc_rates)))
+
 def initialise_axes(ax=None):
     # If no axes specified: create new figure with new empty axes
     if ax is None:
