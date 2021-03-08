@@ -185,7 +185,7 @@ class Model(torch.nn.Module):
     
     def init_walks(self, prev_iter):
         # Only reset parameters for previous iteration if a previous iteration was actually provided - if it wasn't, all parameters will be reset when creating a fresh Iteration object in init_iteration
-        if prev_iter is not None:   
+        if prev_iter is not None:
             # The supplied previous iteration might have new walks starting, with empty actions. For these walks some parameters need to be reset
             for a_i, a in enumerate(prev_iter[0].a):
                 # A new walk is indicated by having a None action in the previous iteration
@@ -345,19 +345,37 @@ class Model(torch.nn.Module):
         # Transform list of actions into batch of one-hot row vectors. 
         if self.hyper['has_static_action']:
             # If this world has static actions: whenever action 0 (standing still) appears, the action vector should be all zeros. All other actions should have a 1 in the label-1 entry
-            a = torch.zeros((len(a_prev_step),self.hyper['n_actions'])).scatter_(1, torch.clamp(torch.tensor(a_prev_step).unsqueeze(1)-1,min=0), 1.0*(torch.tensor(a_prev_step).unsqueeze(1)>0))
+            a = torch.zeros(
+                (len(a_prev_step), self.hyper['n_actions'])
+                ).scatter_(
+                    1,
+                    torch.clamp(torch.tensor(a_prev_step).unsqueeze(1)-1,min=0),
+                    1.0*(torch.tensor(a_prev_step).unsqueeze(1)>0)
+                    )
         else:
             # Without static actions: each action label should become a one-hot vector for that label
             a = torch.zeros((len(a_prev_step),self.hyper['n_actions'])).scatter_(1, torch.tensor(a_prev_step).unsqueeze(1), 1.0)
         # Get vector of transition weights by feeding actions into MLP        
         D_a = self.MLP_D_a([a for _ in range(self.hyper['n_f'])])
-        # Replace transition weights by non-directional transition weights in environments where transition direction needs to be omitted (can set only if any no_direc)
+        # Replace transition weights by non-directional transition weights in
+        # environments where transition direction needs to be omitted
+        # (can set only if any no_direc)
         for f in range(self.hyper['n_f']):
             D_a[f][no_direc,:] = self.D_no_a[f]
-        # Reshape transition weight vector into transition matrix. The number of rows in the transition matrix is given by the incoming abstract location connections for each frequency module
-        D_a = [torch.reshape(D_a[f_to],(-1, sum([self.hyper['n_g'][f_from] for f_from in range(self.hyper['n_f']) if self.hyper['g_connections'][f_to][f_from]]), self.hyper['n_g'][f_to])) for f_to in range(self.hyper['n_f'])]        
+        # Reshape transition weight vector into transition matrix.
+        # The number of rows in the transition matrix is given by the
+        # incoming abstract location connections for each frequency module
+        reshaped_D_a = []
+        for f_to in range(self.hyper['n_f']):
+            dim1 = -1
+            dim2 = sum(
+                [self.hyper['n_g'][f_from] for f_from in range(self.hyper['n_f']) if self.hyper['g_connections'][f_to][f_from]]
+                )
+            dim3 = self.hyper['n_g'][f_to]
+            reshaped_D_a.append(torch.reshape(D_a[f_to], (dim1, dim2, dim3)))
+        D_a = reshaped_D_a
         # Select the frequency modules of the previous abstract location that are connected to each frequency module, to 
-        g_in = [torch.unsqueeze(torch.cat([g_prev[f_from] for f_from in range(self.hyper['n_f']) if self.hyper['g_connections'][f_to][f_from]], dim=1),1) for f_to in range(self.hyper['n_f'])]        
+        g_in = [torch.unsqueeze(torch.cat([g_prev[f_from] for f_from in range(self.hyper['n_f']) if self.hyper['g_connections'][f_to][f_from]], dim=1),1) for f_to in range(self.hyper['n_f'])]
         # Reshape transition weight vector into transition matrix. The number of rows in the transition matrix is given by the incoming abstract location connections for each frequency module
         delta = [torch.squeeze(torch.matmul(g, T)) for g, T in zip(g_in, D_a)]
         # Not in the paper, but recommended by James for stability: use inferred code as *difference* in abstract location. Calculate new abstract location from previous abstract location and difference
@@ -618,7 +636,10 @@ class Iteration:
     def detach(self):
         # Detach all tensors contained in this iteration
         self.L = [tensor.detach() for tensor in self.L]
-        self.M = [tensor.detach() for tensor in self.M]
+        try:
+            self.M = [tensor.detach() for tensor in self.M]
+        except AttributeError:
+            self.M = self.M
         self.g_gen = [tensor.detach() for tensor in self.g_gen]
         self.p_gen = [tensor.detach() for tensor in self.p_gen]
         self.x_gen = [tensor.detach() for tensor in self.x_gen]
