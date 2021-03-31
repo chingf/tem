@@ -39,11 +39,11 @@ def parameters():
     # Number of steps to roll out before backpropagation through time
     params['n_rollout'] = 20
     # Batch size: number of walks for training simultaneously
-    params['batch_size'] = 16    
+    params['batch_size'] = 16
     # Minimum length of a walk on one environment. Walk lengths are sampled uniformly from a window that shifts down until its lower limit is walk_it_min at the end of training
     params['walk_it_min'] = 25
     # Maximum length of a walk on one environment. Walk lengths are sampled uniformly from a window that starts with its upper limit at walk_it_max in the beginning of training, then shifts down
-    params['walk_it_max'] = 300
+    params['walk_it_max'] = 100
     # Width of window from which walk lengths are sampled: at any moment, new walk lengths are sampled window_center +/- 0.5 * walk_it_window where window_center shifts down
     params['walk_it_window'] = 0.2 * (params['walk_it_max'] - params['walk_it_min'])
     # Weights of prediction losses
@@ -87,7 +87,7 @@ def parameters():
     # Decide whether to sample, or assume no noise and simply take mean of all distributions
     params['do_sample'] = False
     # Decide whether to use inferred ground location while inferring new abstract location, instead of only previous grounded location (James's infer_g_type)
-    params['use_p_inf'] = True    
+    params['use_p_inf'] = False
     # Decide whether to use seperate grid modules that recieve shiny information for object vector cells. To disable OVC, set this False, and set n_ovc to [0 for _ in range(len(params['n_g_subsampled']))]
     params['separate_ovc'] = False
     # Standard deviation for initial initial g (which will then be learned)
@@ -99,7 +99,7 @@ def parameters():
     
     # ---- Neuron and module parameters
     # Neurons for subsampled entorhinal abstract location f_g(g) for each frequency module
-    params['n_g_subsampled'] = [10 + 10 + 8 + 6]
+    params['n_g_subsampled'] = [20] #[10 + 10 + 8 + 6]
     # Neurons for object vector cells. Neurons will get new modules if object vector cell modules are separated; otherwise, they are added to existing abstract location modules.
     # a) No additional modules, no additional object vector neurons (e.g. when not using shiny environments): [0 for _ in range(len(params['n_g_subsampled']))], and separate_ovc set to False
     # b) No additional modules, but n additional object vector neurons in each grid module: [n for _ in range(len(params['n_g_subsampled']))], and separate_ovc set to False
